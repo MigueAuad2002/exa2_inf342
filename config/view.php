@@ -4,7 +4,7 @@ return [
 
     //DIRECTORIO DONDE SE ENCUENTRAN LOS TEMPLATES (HTML)
     'paths' => [
-        base_path('app/Templates'),
+        base_path('app/templates'),
     ],
 
     //DIRECTORIO PARA EL CACHE DE LAS VISTAS (TEMPLATES)
