@@ -18,9 +18,13 @@ class Config
     // Cargar configuración desde .env
     public static function load()
     {
-        // Cargar archivo .env desde la raíz del proyecto
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
+        $envPath = __DIR__ . '/../.env';
+        
+        // Solo cargar .env si existe (en local)
+        if (file_exists($envPath)) {
+            $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+            $dotenv->load();
+        }
 
         // Variables de entorno para la base de datos
         self::$DB_HOST = $_ENV['DB_HOST'] ?? 'localhost';
