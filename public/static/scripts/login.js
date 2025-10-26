@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertError = document.getElementById('alert-error');
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+    console.log('LOGIN CARGADO');
+
     
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault(); // evitar que el form recargue la página

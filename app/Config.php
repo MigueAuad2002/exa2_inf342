@@ -19,7 +19,7 @@ class Config
     public static function load()
     {
         $envPath = __DIR__ . '/../.env';
-        
+
         // Solo cargar .env si existe (en local)
         if (file_exists($envPath)) {
             $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
@@ -27,11 +27,11 @@ class Config
         }
 
         // Variables de entorno para la base de datos
-        self::$DB_HOST = $_ENV['DB_HOST'] ?? 'localhost';
-        self::$DB_NAME = $_ENV['DB_DATABASE'] ?? 'ficct_db';
-        self::$DB_PORT = $_ENV['DB_PORT'] ?? 5432;
-        self::$DB_USER = $_ENV['DB_USERNAME'] ?? 'postgres';
-        self::$DB_PASSWORD = $_ENV['DB_PASSWORD'] ?? '';
+        self::$DB_HOST = $_ENV['DB_HOST'];
+        self::$DB_NAME = $_ENV['DB_DATABASE'];
+        self::$DB_PORT = $_ENV['DB_PORT'];
+        self::$DB_USER = $_ENV['DB_USERNAME'];
+        self::$DB_PASSWORD = $_ENV['DB_PASSWORD'];
 
         // Crear la instancia global del gestor de base de datos
         self::$db = new Postgres_DB(
