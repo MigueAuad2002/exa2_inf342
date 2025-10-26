@@ -122,6 +122,6 @@
     © {{ date('Y') }} Facultad de Ingeniería — UAGRM | INF342
   </footer>
 
-  <script src="{{ asset('static/scripts/index.js') }}"></script>
+  <script src="{{ secure_asset('static/scripts/index.js') }}"></script>
 </body>
 </html>

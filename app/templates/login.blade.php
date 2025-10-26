@@ -60,7 +60,7 @@
         </div>
 
     </div>
-    <script src="{{ asset('static/scripts/login.js') }}"></script>
+    <script src="{{ secure_asset('static/scripts/login.js') }}"></script>
 
 </body>
 </html>
