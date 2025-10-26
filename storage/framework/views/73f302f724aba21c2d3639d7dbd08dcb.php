@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Importar usuarios — Plataforma Universitaria INF342</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 </head>
 
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col font-sans antialiased">
@@ -41,7 +41,7 @@
             Rellénala con los datos de los usuarios y luego súbela utilizando el formulario inferior.
           </p>
         </div>
-        <a href="{{ secure_asset('static/files/plantilla_usuarios.xlsx') }}" download
+        <a href="<?php echo e(asset('static/files/plantilla_usuarios.xlsx')); ?>" download
            class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v12m0 0l-3-3m3 3l3-3M4 16h16" />
@@ -103,6 +103,7 @@
     </div>
   </div>
 
-  <script src="{{ secure_asset('static/scripts/import_user.js') }}"></script>
+  <script src="<?php echo e(asset('static/scripts/import_user.js')); ?>"></script>
 </body>
 </html>
+<?php /**PATH C:\Users\migue\OneDrive\Escritorio\projects\inf342_2exa\app\templates/import_user.blade.php ENDPATH**/ ?>

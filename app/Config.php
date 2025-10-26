@@ -20,7 +20,7 @@ class Config
     {
         $envPath = __DIR__ . '/../.env';
 
-        // Solo cargar .env si existe (en local)
+        //CARGAR VARIABLES DE ENTORNO SOLO SI EXISTE
         if (file_exists($envPath)) {
             $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
             $dotenv->load();

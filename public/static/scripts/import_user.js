@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   console.log('DOM CARGADO EXITOSAMENTE.');
 
-  // Mostrar nombre del archivo
+  //MOSTRAR NOMBRE DE ARCHIVO
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
       const name = fileInput.files[0].name;
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Botón cancelar
+  //CANCELLAR
   btnCancelar.addEventListener('click', () => {
     fileInput.value = '';
     fileInfo.classList.add('hidden');
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   modalClose.addEventListener('click', () => modal.classList.add('hidden'));
 
-  // Importar archivo (simulación por ahora)
+  //IMPORTAR ARCHIV
   btnImportar.addEventListener('click', async () => {
     if (fileInput.files.length === 0) {
       showModal('Archivo requerido', 'Seleccione un archivo antes de continuar.');
@@ -48,24 +48,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const formData = new FormData();
     formData.append('archivo', fileInput.files[0]);
 
-    try {
-      const response = await fetch('/admin/importar-usuarios', {
+    const response = await fetch('/admin/import-users', {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': token },
         body: formData
-      });
+    });
 
-      const data = await response.json();
-      loader.classList.add('hidden');
+    const data = await response.json();
+    loader.classList.add('hidden');
 
-      if (data.success) {
-        showModal('Importación exitosa', 'Los usuarios fueron registrados correctamente.');
-      } else {
-        showModal('Error en importación', data.message || 'No se pudieron procesar los datos.');
+    if (data.success) {
+      const results = data.data || [];
+      const hasErrors = results.some(r => r.success === false);
+
+      if (hasErrors) 
+      {
+        const errores = results
+          .filter(r => !r.success)
+          .map(r => `• ${r.message}`)
+          .join('\n');
+        showModal('Importación parcial', `Algunos usuarios no se importaron:\n${errores}`);
+      } 
+      else 
+      {
+        showModal('Importación exitosa', 'Todos los usuarios fueron registrados correctamente.');
       }
-    } catch (error) {
-      loader.classList.add('hidden');
-      showModal('Error del servidor', 'No se pudo conectar con el servidor.');
+    } 
+    else 
+    {
+      showModal('Error en importación', data.message || 'No se pudieron procesar los datos.');
     }
+
   });
 });
