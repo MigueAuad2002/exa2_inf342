@@ -15,6 +15,12 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
     && rm composer-setup.php
 
+#INSTALAR DEPENDENCIAS NECESARIAS DEL CONTENEDOR
+RUN apt-get update && apt-get install -y \
+    libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libxpm-dev && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
+    docker-php-ext-install gd
+
 #INSTALAR DEPENDENCIAS DEL PROYECTO
 RUN composer install --no-dev --optimize-autoloader
 
