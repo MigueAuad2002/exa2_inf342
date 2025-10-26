@@ -1,31 +1,29 @@
-#IMAGEN OFICIAL DE PHP COMPOSER
+# IMAGEN BASE OFICIAL DE PHP
 FROM php:8.2-cli
 
-#INSTALAR DEPENDENCIAS
-RUN apt-get update && apt-get install -y git unzip libpq-dev && docker-php-ext-install pdo pdo_pgsql
+# INSTALAR DEPENDENCIAS DEL SISTEMA Y EXTENSIONES DE PHP
+RUN apt-get update && apt-get install -y \
+    git unzip zip libpq-dev libzip-dev \
+    libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libxpm-dev && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
+    docker-php-ext-install pdo pdo_pgsql gd zip
 
-# Define el directorio de trabajo
+# DEFINIR DIRECTORIO DE TRABAJO
 WORKDIR /app
 
-#COPIA TODO EL PROYECTO DENTRO DEL CONTENEDOR
+# COPIAR TODO EL PROYECTO DENTRO DEL CONTENEDOR
 COPY . /app
 
-#INSTALA COMPOSER SI NO VIENE INCLUIDO EN RENDER
+# INSTALAR COMPOSER (SI NO ESTÁ PRESENTE EN LA IMAGEN)
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
     && rm composer-setup.php
 
-#INSTALAR DEPENDENCIAS NECESARIAS DEL CONTENEDOR
-RUN apt-get update && apt-get install -y \
-    libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libxpm-dev && \
-    docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
-    docker-php-ext-install gd
-
-#INSTALAR DEPENDENCIAS DEL PROYECTO
+# INSTALAR DEPENDENCIAS DEL PROYECTO
 RUN composer install --no-dev --optimize-autoloader
 
-#EXPONE EL PUERTO 8000 PARA QUE RENDER LO USE
+# EXPONER EL PUERTO 8000 (USADO POR RENDER)
 EXPOSE 8000
 
-#COMANDO QUE USARA RENDER PARA LEVANTAR LA APP
+# COMANDO PARA INICIAR LA APLICACIÓN
 CMD ["php", "run.php"]
