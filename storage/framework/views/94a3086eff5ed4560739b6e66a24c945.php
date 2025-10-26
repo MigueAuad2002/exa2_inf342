@@ -3,49 +3,126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plataforma Universitaria | INF342</title>
-  <!-- Tailwind desde CDN (puedes cambiarlo luego a local) -->
+  <title>Inicio — Plataforma Universitaria INF342</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col font-sans">
+
   <!-- Barra superior -->
-  <header class="bg-blue-700 text-white shadow-md py-4">
-    <div class="max-w-7xl mx-auto flex justify-between items-center px-6">
-      <h1 class="text-xl font-bold tracking-wide">🎓 Plataforma Universitaria</h1>
-      <nav class="space-x-6">
-        <a href="#" class="hover:text-blue-200 transition">Inicio</a>
-        <a href="#" class="hover:text-blue-200 transition">Materias</a>
-        <a href="#" class="hover:text-blue-200 transition">Docentes</a>
-        <a href="#" class="hover:text-blue-200 transition">Contacto</a>
-      </nav>
+  <header class="bg-purple-100 shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <div class="bg-purple-100 max-w-7xl mx-auto flex justify-between items-center px-6 py-3">
+      <h1 class="text-lg md:text-xl font-semibold text-purple-700 tracking-wide">
+        🎓 Plataforma Universitaria — INF342
+      </h1>
+
+      <div class="flex items-center gap-4">
+        <div class="hidden sm:block text-right">
+          <p class="font-semibold text-gray-700"><?php echo e($user['nomb_comp']); ?></p>
+          <p class="text-xs text-gray-500"><?php echo e(ucfirst($user['nombre'])); ?></p>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold shadow-sm">
+          <?php echo e(strtoupper(substr($user['nomb_comp'],0,1))); ?>
+
+        </div>
+        <form action="/logout" method="POST">
+          <?php echo csrf_field(); ?>
+          <button type="submit"
+                  class="ml-2 bg-gray-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-md text-sm font-medium transition">
+            Cerrar sesión
+          </button>
+        </form>
+      </div>
     </div>
   </header>
 
   <!-- Contenido principal -->
-  <main class="flex-1 flex items-center justify-center px-4">
-    <div class="bg-white p-10 rounded-2xl shadow-lg max-w-lg w-full text-center">
-      <h2 class="text-2xl font-semibold mb-4 text-blue-700">Bienvenido a la Plataforma</h2>
-      <p class="text-gray-600 mb-6">
-        Sistema de gestión universitaria para estudiantes y docentes.
-        Accede a tus materias, horarios, calificaciones y más.
-      </p>
-      <div class="flex justify-center gap-4">
-        <a href="/login" 
-           class="bg-blue-700 hover:bg-blue-800 text-white py-2 px-6 rounded-lg transition">
-           Iniciar Sesión
-        </a>
-        <a href="/register" 
-           class="border border-blue-700 hover:bg-blue-50 text-blue-700 py-2 px-6 rounded-lg transition">
-           Registrarse
-        </a>
+  <main class="flex-1 max-w-7xl mx-auto w-full py-10 px-6">
+
+    <!-- Encabezado -->
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-1">Panel principal</h2>
+        <p class="text-gray-500 text-sm">Gestión académica y control docente</p>
       </div>
+      <div id="clock" class="text-sm text-gray-600 font-medium mt-3 md:mt-0"></div>
+    </div>
+
+    <!-- Tarjetas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-cards">
+
+      <!-- Datos personales -->
+      <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg border border-gray-100 transition">
+        <h3 class="text-lg font-semibold text-purple-700 mb-3">Datos personales</h3>
+        <ul class="text-sm text-gray-600 space-y-1">
+          <li><span class="font-semibold">CI:</span> <?php echo e($user['ci']); ?></li>
+          <li><span class="font-semibold">Correo:</span> <?php echo e($user['correo'] ?? '—'); ?></li>
+          <li><span class="font-semibold">Teléfono:</span> <?php echo e($user['tel'] ?? '—'); ?></li>
+          <li><span class="font-semibold">Rol:</span> <?php echo e(ucfirst($user['nombre'])); ?></li>
+        </ul>
+      </div>
+
+      <?php $rol = strtolower($user['nombre']); ?>
+
+      <!-- ADMIN -->
+      <?php if($rol === 'admin'): ?>
+        <div class="bg-gradient-to-br from-purple-100 to-gray-50 p-6 rounded-xl border border-purple-200 shadow-sm hover:shadow-md transition">
+          <h3 class="text-lg font-semibold text-purple-700 mb-3">Administración general</h3>
+          <ul class="text-sm text-gray-600 space-y-1">
+            <li>👥 Gestión de docentes y usuarios</li>
+            <li>📚 Asignación de materias y grupos</li>
+            <li>🏫 Administración de aulas</li>
+            <li>📈 Reportes globales</li>
+          </ul>
+        </div>
+      <?php elseif($rol === 'autoridad'): ?>
+        <div class="bg-gradient-to-br from-violet-100 to-gray-50 p-6 rounded-xl border border-violet-200 shadow-sm hover:shadow-md transition">
+          <h3 class="text-lg font-semibold text-violet-700 mb-3">Panel de autoridad</h3>
+          <ul class="text-sm text-gray-600 space-y-1">
+            <li>📊 Estadísticas de asistencia</li>
+            <li>📄 Reportes por docente y grupo</li>
+            <li>🏫 Monitoreo de aulas y horarios</li>
+          </ul>
+        </div>
+      <?php elseif($rol === 'docente'): ?>
+        <div class="bg-gradient-to-br from-indigo-100 to-gray-50 p-6 rounded-xl border border-indigo-200 shadow-sm hover:shadow-md transition">
+          <h3 class="text-lg font-semibold text-indigo-700 mb-3">Panel docente</h3>
+          <ul class="text-sm text-gray-600 space-y-1">
+            <li>📘 Ver materias asignadas</li>
+            <li>🕒 Registrar asistencia</li>
+            <li>📅 Consultar horarios</li>
+          </ul>
+        </div>
+      <?php elseif($rol === 'administrativo'): ?>
+        <div class="bg-gradient-to-br from-gray-100 to-purple-50 p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+          <h3 class="text-lg font-semibold text-gray-700 mb-3">Panel administrativo</h3>
+          <ul class="text-sm text-gray-600 space-y-1">
+            <li>🧾 Validar registros</li>
+            <li>👥 Control de personal</li>
+            <li>🏫 Gestión de aulas y equipos</li>
+          </ul>
+        </div>
+      <?php endif; ?>
+
+      <!-- Avisos -->
+      <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg border border-gray-100 transition">
+        <h3 class="text-lg font-semibold text-purple-700 mb-3">Avisos y novedades</h3>
+        <ul id="news-list" class="text-sm text-gray-600 space-y-2">
+          <li>📢 Nueva gestión académica: <span class="font-medium text-purple-700">2025-I</span></li>
+          <li>🧾 Se habilitó el registro de asistencia docente</li>
+          <li>📊 Actualización en reportes de aula</li>
+        </ul>
+      </div>
+
     </div>
   </main>
 
-  <!-- Pie de página -->
-  <footer class="bg-blue-800 text-blue-100 text-center py-3">
-    <p class="text-sm">&copy; <?php echo e(date('Y')); ?> Facultad de Ingeniería - UAGRM | INF342</p>
+  <!-- Footer -->
+  <footer class="text-center py-4 text-xs text-gray-500 border-t border-gray-200 bg-white mt-10">
+    © <?php echo e(date('Y')); ?> Facultad de Ingeniería — UAGRM | INF342
   </footer>
+
   <script src="<?php echo e(asset('static/scripts/index.js')); ?>"></script>
 </body>
 </html>
