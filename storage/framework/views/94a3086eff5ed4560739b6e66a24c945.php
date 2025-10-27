@@ -170,10 +170,10 @@
 
   <!-- Footer -->
   <footer class="text-center py-4 text-xs text-gray-500 border-t border-gray-200 bg-white mt-10">
-    © <?php echo e(date('Y')); ?> Facultad de Ingeniería — UAGRM | INF342
+    © <?php echo e(date('Y')); ?> Grupo 32 — UAGRM | INF342 - SA
   </footer>
 
-  <script src="<?php echo e(asset('static/scripts/index.js')); ?>"></script>
+  <script src="<?php echo e(secure_asset('static/scripts/index.js')); ?>"></script>
 </body>
 </html>
 <?php /**PATH C:\Users\migue\OneDrive\Escritorio\projects\inf342_2exa\app\templates/index.blade.php ENDPATH**/ ?>

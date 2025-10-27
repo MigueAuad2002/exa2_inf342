@@ -167,7 +167,7 @@
 
   <!-- Footer -->
   <footer class="text-center py-4 text-xs text-gray-500 border-t border-gray-200 bg-white mt-10">
-    © {{ date('Y') }} Facultad de Ingeniería — UAGRM | INF342
+    © {{ date('Y') }} Grupo 32 — UAGRM | INF342 - SA
   </footer>
 
   <script src="{{ secure_asset('static/scripts/index.js') }}"></script>
