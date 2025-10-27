@@ -25,3 +25,36 @@ function user_has_permission($userId, $permName) : bool {
     $perms = user_permissions($userId);
     return in_array(strtoupper($permName), $perms);
 }
+
+/**
+ * Middleware class Checkpermiso
+ * Uso en rutas: ->middleware('checkpermiso:VER_ROLES') o registrar en kernel.php
+ * El parámetro (p.ej. VER_ROLES) es el nombre del permiso esperado.
+ */
+class Checkpermiso
+{
+    /**
+     * Handle an incoming request.
+     * @param \Illuminate\Http\Request $request
+     * @param \Closure $next
+     * @param string|null $perm
+     */
+    public function handle($request, Closure $next, $perm = null)
+    {
+        // Intentamos obtener el id de usuario desde la sesión (ajusta si usas Auth::id())
+        $userId = $request->session()->get('user_code');
+        if (! $userId) {
+            // No autenticado
+            if ($request->ajax()) return response()->json(['success'=>false,'message'=>'No autenticado'],401);
+            return redirect('/login');
+        }
+
+        // Si se pasó un permiso, comprobarlo
+        if ($perm && ! user_has_permission($userId, $perm)) {
+            if ($request->ajax()) return response()->json(['success'=>false,'message'=>'No autorizado'],403);
+            return response()->view('errors.403', [], 403);
+        }
+
+        return $next($request);
+    }
+}

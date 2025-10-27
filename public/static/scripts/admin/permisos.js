@@ -95,32 +95,46 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadTable() {
     try {
       showLoader();
-  const res = await fetch('/admin/permissions', { headers: { 'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest' } });
-      if (!res.ok) throw new Error('Error al cargar permisos');
-      const data = await res.json();
-      const list = data.permissions || [];
+      // solicitar lista y los flags 'can' (para mostrar/ocultar botones según permisos)
+      const res = await fetch('/admin/permissions', { headers: { 'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest' } });
+       if (!res.ok) throw new Error('Error al cargar permisos');
+       const data = await res.json();
+       const list = data.permissions || [];
+      // Por defecto sin permisos - solo se muestran acciones si el backend explícitamente las permite
+      const can = data.can || { view:false, create:false, edit:false, delete:false };
+
+      // Si no tiene permiso de ver, mostrar mensaje y salir
+      if (!can.view) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No tienes permiso para ver esta sección.</td></tr>';
+        if (btnCreatePerm) btnCreatePerm.style.display = 'none';
+        return;
+      }      // mostrar/ocultar botón crear según permiso
+      if (btnCreatePerm) btnCreatePerm.style.display = can.create ? 'inline-block' : 'none';
       tableBody.innerHTML = '';
       if (!list.length) {
-        tableBody.innerHTML = `<tr><td class="empty-row" colspan="4">No hay permisos registrados. Usa "Crear Permiso" para agregar uno.</td></tr>`;
+        tableBody.innerHTML = `<tr><td class="empty-row" colspan="4">No hay permisos registrados. ${can.create ? 'Usa "Crear Permiso" para agregar uno.' : ''}</td></tr>`;
         return;
       }
       list.forEach((p, i) => {
         const tr = document.createElement('tr');
+        // Renderizar botones solo si el usuario tiene permiso
+        const canEditBtn = can.edit ? `<button data-id="${p.id}" class="btn-edit btn">Editar</button>` : '';
+        const canDeleteBtn = can.delete ? `<button data-id="${p.id}" class="btn-delete btn btn-danger">Eliminar</button>` : '';
         tr.innerHTML = `
           <td>${i+1}</td>
           <td>${escapeHtml(p.nombre)}</td>
           <td>${escapeHtml(p.descripcion || '')}</td>
           <td>
-            <button data-id="${p.id}" class="btn-edit btn">Editar</button>
-            <button data-id="${p.id}" class="btn-delete btn btn-danger">Eliminar</button>
+            ${canEditBtn}
+            ${canDeleteBtn}
           </td>
         `;
         tableBody.appendChild(tr);
       });
 
-      // Eventos
-      document.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', onEditPerm));
-      document.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', onDeletePerm));
+  // Eventos (solo existen si el usuario tiene permisos correspondientes)
+  document.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', onEditPerm));
+  document.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', onDeletePerm));
     } catch (err) {
       console.error('loadTable error', err);
       showModal('Error', err.message || 'Error desconocido al cargar permisos');

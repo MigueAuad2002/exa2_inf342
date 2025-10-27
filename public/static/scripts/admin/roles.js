@@ -158,30 +158,47 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       showLoader();
       const res = await fetch('/admin/roles', { headers: { 'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest' } });
-      if (!res.ok) {
+       if (!res.ok) {
         if (res.status === 403) { showModal('Acceso denegado', 'No tienes permisos para ver roles'); return; }
         throw new Error('Error al cargar roles');
       }
       const data = await res.json();
       const roles = data.roles || [];
+      // Por defecto sin permisos - solo se muestran acciones si el backend explícitamente las permite
+      const can = data.can || { view:false, create:false, edit:false, delete:false };
+
+      // Si no tiene permiso de ver, mostrar mensaje y salir
+      if (!can.view) {
+        rolesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No tienes permiso para ver esta sección.</td></tr>';
+        if (btnCreateRole) btnCreateRole.style.display = 'none';
+        return;
+      }
       rolesTableBody.innerHTML = '';
+
+      // mostrar/ocultar botón crear según permiso
+      if (btnCreateRole) btnCreateRole.style.display = can.create ? 'inline-block' : 'none';
 
       roles.forEach((r, i) => {
         const tr = document.createElement('tr');
         const permKeys = (r.permissions || []).map(p => p.nombre).join(', ');
+
+        // botones según permisos del usuario
+        const editBtn = can.edit ? `<button data-id="${r.id}" class="btn-edit btn">Editar</button>` : '';
+        const deleteBtn = can.delete ? `<button data-id="${r.id}" class="btn-delete btn btn-danger">Eliminar</button>` : '';
+
         tr.innerHTML = `
           <td>${i+1}</td>
           <td>${escapeHtml(r.nombre)}</td>
           <td>${escapeHtml(permKeys)}</td>
           <td>
-            <button data-id="${r.id}" class="btn-edit btn">Editar</button>
-            <button data-id="${r.id}" class="btn-delete btn btn-danger">Eliminar</button>
+            ${editBtn}
+            ${deleteBtn}
           </td>
         `;
         rolesTableBody.appendChild(tr);
       });
 
-      // Asignar eventos
+      // Asignar eventos solo a botones que existen
       document.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', onEditClicked));
       document.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', onDeleteClicked));
     } catch (err) {

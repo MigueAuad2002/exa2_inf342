@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 
+// helpers generales
 require_once app_path('/services/help_functs.php');
+// helper para permisos/roles (funciones user_permissions, user_has_permission)
+require_once app_path('/services/helper_rol_permisos.php');
 
 //ENDPOINT LOGOUT
 /*Route::get('/admin/import-users',function()
@@ -28,6 +31,16 @@ Route::match(['get','post'],'/admin/import-users',function(Request $request)
     if (!Session::has('user_code'))
     {
         return redirect('/login');
+    }
+
+    // Comprobar permiso específico para importación masiva
+    $userId = Session::get('user_code');
+    if (! user_has_permission($userId, 'IMPORTAR_USUARIOS')) {
+        if ($request->isMethod('get')) {
+            // devolver vista de acceso denegado o redirigir al inicio
+            return redirect('/')->with('error','No autorizado');
+        }
+        return response()->json(['success'=>false,'message'=>'No autorizado'],403);
     }
 
     if ($request->isMethod('get'))
@@ -121,8 +134,18 @@ Route::group([], function() {
         }
 
         // Ajustado a la estructura: tabla `permisos` con columnas `id`, `nombre`, `descripcion`
-    $perms = DB::table('ex_g32.permisos')->orderBy('id')->get();
-    return response()->json(['permissions' => $perms]);
+        $perms = DB::table('ex_g32.permisos')->orderBy('id')->get();
+
+        // Agregar permisos del usuario autenticado (para el frontend) -> 'can' flags
+        $userId = Session::get('user_code');
+        $can = [
+            'view' => user_has_permission($userId, 'VER_PERMISOS'),
+            'create' => user_has_permission($userId, 'CREAR_PERMISO'),
+            'edit' => user_has_permission($userId, 'EDITAR_PERMISO'),
+            'delete' => user_has_permission($userId, 'ELIMINAR_PERMISO')
+        ];
+
+        return response()->json(['permissions' => $perms, 'can' => $can]);
     });
 
     // Ver un permiso
@@ -132,13 +155,26 @@ Route::group([], function() {
     $perm = DB::table('ex_g32.permisos')->where('id', $id)->first();
         if (! $perm) return response()->json(['success'=>false,'message'=>'Permiso no encontrado'],404);
 
-        return response()->json(['permission' => $perm]);
+        // incluir flags de permiso (útil en UI de edición)
+        $userId = Session::get('user_code');
+        $can = [
+            'edit' => user_has_permission($userId, 'EDITAR_PERMISO'),
+            'delete' => user_has_permission($userId, 'ELIMINAR_PERMISO')
+        ];
+
+        return response()->json(['permission' => $perm, 'can' => $can]);
     });
 
     // Crear permiso
     Route::post('/admin/permissions', function(Request $request) {
         $request->headers->set('X-Requested-With', 'XMLHttpRequest');
         if (! Session::has('user_code')) return redirect('/login');
+
+        // Backend: validar que el usuario tenga permiso para crear permisos
+        $userId = Session::get('user_code');
+        if (! user_has_permission($userId, 'CREAR_PERMISO')) {
+            return response()->json(['success'=>false,'message'=>'No autorizado'],403);
+        }
 
         // Validación usando los nombres esperados: nombre, descripcion
         $v = Validator::make($request->all(), [
@@ -170,6 +206,12 @@ Route::group([], function() {
     Route::put('/admin/permissions/{id}', function(Request $request, $id) {
         $request->headers->set('X-Requested-With', 'XMLHttpRequest');
         if (! Session::has('user_code')) return redirect('/login');
+
+        // Backend: validar permiso de edición
+        $userId = Session::get('user_code');
+        if (! user_has_permission($userId, 'EDITAR_PERMISO')) {
+            return response()->json(['success'=>false,'message'=>'No autorizado'],403);
+        }
 
     $perm = DB::table('ex_g32.permisos')->where('id', $id)->first();
         if (! $perm) return response()->json(['success'=>false,'message'=>'Permiso no encontrado'],404);
@@ -203,6 +245,12 @@ Route::group([], function() {
     Route::delete('/admin/permissions/{id}', function(Request $request, $id) {
         $request->headers->set('X-Requested-With', 'XMLHttpRequest');
         if (! Session::has('user_code')) return redirect('/login');
+
+        // Backend: validar permiso de eliminación
+        $userId = Session::get('user_code');
+        if (! user_has_permission($userId, 'ELIMINAR_PERMISO')) {
+            return response()->json(['success'=>false,'message'=>'No autorizado'],403);
+        }
 
     $perm = DB::table('ex_g32.permisos')->where('id', $id)->first();
         if (! $perm) return response()->json(['success'=>false,'message'=>'Permiso no encontrado'],404);
@@ -244,7 +292,7 @@ Route::group([], function() {
         }
 
         // Usar la tabla `rol` (id, nombre, descripcion)
-    $roles = DB::table('ex_g32.rol')->orderBy('nombre')->get();
+        $roles = DB::table('ex_g32.rol')->orderBy('nombre')->get();
 
         // mapear cada rol con sus permisos (array)
         $rolesWithPerms = $roles->map(function($r) {
@@ -261,7 +309,16 @@ Route::group([], function() {
             ];
         });
 
-        return response()->json(['roles' => $rolesWithPerms]);
+        // incluir flags de acción para frontend
+        $userId = Session::get('user_code');
+        $can = [
+            'view' => user_has_permission($userId, 'VER_ROLES'),
+            'create' => user_has_permission($userId, 'CREAR_ROL'),
+            'edit' => user_has_permission($userId, 'EDITAR_ROL'),
+            'delete' => user_has_permission($userId, 'ELIMINAR_ROL')
+        ];
+
+        return response()->json(['roles' => $rolesWithPerms, 'can' => $can]);
     });
 
     // Obtener rol por id
@@ -278,13 +335,26 @@ Route::group([], function() {
             ->select('ex_g32.permisos.id','ex_g32.permisos.nombre','ex_g32.permisos.descripcion')
             ->get();
 
-        return response()->json(['role' => ['id'=>$role->id,'nombre'=>$role->nombre,'descripcion'=>$role->descripcion ?? null,'permissions'=>$perms]]);
+        // incluir flags de acción para el frontend (editar/eliminar)
+        $userId = Session::get('user_code');
+        $can = [
+            'edit' => user_has_permission($userId, 'EDITAR_ROL'),
+            'delete' => user_has_permission($userId, 'ELIMINAR_ROL')
+        ];
+
+        return response()->json(['role' => ['id'=>$role->id,'nombre'=>$role->nombre,'descripcion'=>$role->descripcion ?? null,'permissions'=>$perms], 'can' => $can]);
     });
 
     // Crear rol (con permisos)
     Route::post('/admin/roles', function(Request $request) {
         $request->headers->set('X-Requested-With', 'XMLHttpRequest');
         if (! Session::has('user_code')) return redirect('/login');
+
+        // Backend: validar permiso de creación de roles
+        $userId = Session::get('user_code');
+        if (! user_has_permission($userId, 'CREAR_ROL')) {
+            return response()->json(['success'=>false,'message'=>'No autorizado'],403);
+        }
 
         $v = Validator::make($request->all(), [
             'nombre' => 'required|string|max:100',
@@ -343,6 +413,12 @@ Route::group([], function() {
     Route::put('/admin/roles/{id}', function(Request $request, $id) {
         $request->headers->set('X-Requested-With', 'XMLHttpRequest');
         if (! Session::has('user_code')) return redirect('/login');
+
+        // Backend: validar permiso de edición
+        $userId = Session::get('user_code');
+        if (! user_has_permission($userId, 'EDITAR_ROL')) {
+            return response()->json(['success'=>false,'message'=>'No autorizado'],403);
+        }
 
     $role = DB::table('ex_g32.rol')->where('id',$id)->first();
         if (! $role) return response()->json(['success'=>false,'message'=>'Rol no encontrado'],404);
@@ -403,6 +479,12 @@ Route::group([], function() {
     Route::delete('/admin/roles/{id}', function(Request $request, $id) {
         $request->headers->set('X-Requested-With', 'XMLHttpRequest');
         if (! Session::has('user_code')) return redirect('/login');
+
+        // Backend: validar permiso de eliminación
+        $userId = Session::get('user_code');
+        if (! user_has_permission($userId, 'ELIMINAR_ROL')) {
+            return response()->json(['success'=>false,'message'=>'No autorizado'],403);
+        }
 
     $role = DB::table('ex_g32.rol')->where('id',$id)->first();
         if (! $role) return response()->json(['success'=>false,'message'=>'Rol no encontrado'],404);

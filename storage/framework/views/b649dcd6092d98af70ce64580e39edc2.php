@@ -89,8 +89,15 @@
     <!-- Tarjetas -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      <!-- Panel de Administración -->
-      <?php if($user['nombre'] === 'ADMIN'): ?>
+      <!-- Panel de Administración - Se muestra solo si tiene algún permiso administrativo -->
+      <?php
+        $canViewPermissions = user_has_permission($user['codigo'], 'VER_PERMISOS');
+        $canViewRoles = user_has_permission($user['codigo'], 'VER_ROLES');
+        $canImportUsers = user_has_permission($user['codigo'], 'IMPORTAR_USUARIOS');
+        $showAdminPanel = $canViewPermissions || $canViewRoles || $canImportUsers;
+      ?>
+      
+      <?php if($showAdminPanel): ?>
       <div class="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-xl shadow-sm border border-indigo-100 hover:shadow-md transition col-span-1 sm:col-span-2 lg:col-span-3">
         <h3 class="text-lg font-semibold text-indigo-700 mb-4 flex items-center">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,6 +109,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Gestión de Roles -->
+          <?php if($canViewRoles): ?>
           <a href="/admin/roles" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-indigo-300 hover:shadow transition group">
             <div class="flex items-center mb-2">
               <svg class="w-5 h-5 text-indigo-600 group-hover:text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,8 +119,10 @@
             </div>
             <p class="text-sm text-gray-600">Gestionar roles y sus permisos</p>
           </a>
+          <?php endif; ?>
 
           <!-- Gestión de Permisos -->
+          <?php if($canViewPermissions): ?>
           <a href="/admin/permissions" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-indigo-300 hover:shadow transition group">
             <div class="flex items-center mb-2">
               <svg class="w-5 h-5 text-indigo-600 group-hover:text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,8 +132,10 @@
             </div>
             <p class="text-sm text-gray-600">Administrar permisos del sistema</p>
           </a>
+          <?php endif; ?>
 
           <!-- Registro masivo de usuarios -->
+          <?php if($canImportUsers): ?>
           <a href="/admin/import-users" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:border-indigo-300 hover:shadow transition group">
             <div class="flex items-center mb-2">
               <svg class="w-5 h-5 text-indigo-600 group-hover:text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,6 +145,7 @@
             </div>
             <p class="text-sm text-gray-600">Cargar archivo CSV/XLSX para crear múltiples usuarios</p>
           </a>
+          <?php endif; ?>
         </div>
       </div>
       <?php endif; ?>

@@ -44,11 +44,20 @@
   </style>
 </head>
 <body>
-  {{-- Opcional: control UI simple. Recomendado también proteger ruta en backend. --}}
-  @if(!Session::has('user_code'))
+  {{-- Control de acceso basado en permisos --}}
+  @php
+    $userId = Session::get('user_code');
+    $canViewRoles = user_has_permission($userId, 'VER_ROLES');
+  @endphp
+  
+  @if(!$canViewRoles)
     <div class="card">
       <h2>Acceso denegado</h2>
-      <p>Debes iniciar sesión para ver esta página.</p>
+      <p>No tienes los permisos necesarios para ver esta página.</p>
+      <p>Se requiere el permiso: VER_ROLES</p>
+      <a href="/" style="display: inline-block; margin-top: 10px;">
+        <button class="btn btn-outline">← Volver al inicio</button>
+      </a>
     </div>
   @else
     <div class="card">
@@ -58,9 +67,23 @@
           <h1 style="margin:0;">Gestión de Roles</h1>
         </div>
         <div>
-          <button id="btnCreateRole" class="btn btn-primary">+ Crear Rol</button>
+          @php
+            $canCreateRoles = user_has_permission($userId, 'CREAR_ROL');
+          @endphp
+          @if($canCreateRoles)
+            <button id="btnCreateRole" class="btn btn-primary">+ Crear Rol</button>
+          @endif
         </div>
       </div>
+
+      {{-- Pasar permisos a JavaScript --}}
+      <script>
+        window.userPermissions = {
+          canCreate: {{ $canCreateRoles ? 'true' : 'false' }},
+          canEdit: {{ user_has_permission($userId, 'EDITAR_ROL') ? 'true' : 'false' }},
+          canDelete: {{ user_has_permission($userId, 'ELIMINAR_ROL') ? 'true' : 'false' }}
+        };
+      </script>
 
       <div id="loader" class="hidden">Cargando...</div>
 
