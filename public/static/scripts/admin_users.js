@@ -278,41 +278,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnConfirmDelete) {
         btnConfirmDelete.addEventListener('click', async () => {
             if (!userIdToDelete) return;
-
+            
             btnConfirmDelete.disabled = true;
             btnConfirmDelete.textContent = 'Eliminando...';
 
             try {
-                // *** DEBERÁS CREAR ESTE ENDPOINT EN TUS RUTAS ***
-                const response = await fetch(`/admin/users/delete`, {
-                    method: 'POST', 
+                // Usamos la ruta que me mostraste
+                const response = await fetch('/admin/delete', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
+                        'X-CSRF-TOKEN': csrfToken 
                     },
                     body: JSON.stringify({
                         id: userIdToDelete,
                     })
                 });
 
-                const result = await response.json(); // Intenta leer la respuesta siempre
+
+                const result = await response.json(); 
 
                 if (response.ok) {
-                    rowToDelete.classList.add('opacity-0', 'scale-95');
-                    setTimeout(() => {
-                        rowToDelete.remove();
-                        // Re-contar registros
-                        const currentRows = tableBody.querySelectorAll('tr.user-row').length;
-                        totalRecordsDisplay.textContent = `Mostrando ${currentRows} registros.`;
-                    }, 300);
+                       
+                    alert(result.message || 'Usuario eliminado con éxito.');
+                    window.location.reload(); 
                 } else {
-                    alert(result.message || 'Error al eliminar el usuario. Inténtalo de nuevo.');
+                    alert(result.error || 'Error al eliminar el usuario. Inténtalo de nuevo.');
                 }
-
-            } catch (error) {
+        } 
+        catch (error) {
                 console.error('Error de red:', error);
                 alert('Error de red al intentar eliminar el usuario.');
-            } finally {
+        } finally {
                 deleteModal.classList.add('hidden');
                 btnConfirmDelete.disabled = false;
                 btnConfirmDelete.textContent = 'Sí, eliminar';

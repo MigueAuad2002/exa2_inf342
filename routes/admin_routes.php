@@ -9,37 +9,88 @@ use App\Classes\Postgres_DB;
 require_once app_path('/services/help_functs.php');
 
 //ENDPOINT GESTOR DE USUARIOS: ELIMINAR
-/*Route::post('/admin/delete',function(Request $request)
+Route::post('/admin/delete',function(Request $request)
 {
     $request->headers->set('X-Requested-With', 'XMLHttpRequest');
+
+    //VALIDACION:USUARIO EN SESION
+    if (!Session::has('user_code'))
+    {
+        return response()->json([
+            'success'=>false,
+            'message'=>'Usuario no Autenticado.'
+        ]);
+    }
+
+    //VALIDACION:USUARIO ADMIN
+    if (Session::get('user_role')!=='admin')
+    {
+        return response()->json([
+            'success'=>false,
+            'message'=>'El Usuario no es Administrador.'
+        ]);
+    }
 
     //OBTENER DATOS
     $data=$request->json()->all();
     $codigo_eliminar=$data['id'];
 
     //OBTENER DATOS BITACORA
-    $accion = 'GESTION DE USUARIOS';
+    $accion = 'ELIMINAR USUARIO';
     $fecha = date('Y-m-d H:i:s');
     $estado = 'ERROR';
-    $comentario = 'Consultar Usuarios Registrados.';
+    $comentario = 'Eliminar un usuario indicado.';
     $codigo = Session::get('user_code');
 
     $db=Config::$db;
     try
     {
+        $db->create_conection();
 
+        $sql="  SELECT ci
+                FROM ex_g32.usuario
+                WHERE codigo= :codigo";
+        $params=[':codigo'=>$codigo_eliminar];
+
+        $stmt=$db->execute_query($sql,$params);
+        $ci=$db->fetch_one($stmt);
+
+        if ($ci==null)
+        {
+            $db->save_log_bitacora($accion, $fecha, $estado, $comentario, $codigo);
+            return response()->json([
+                'success'=>false,
+                'message'=>'El usuario no esta Registrado en el Sistema.'
+            ]);
+        }
+        $sql="  DELETE FROM ex_g32.persona
+                WHERE ci= :ci";
+        $params=[':ci'=>$ci['ci']];
+        $stmt=$db->execute_query($sql,$params);
+
+        $estado='SUCCESS';
+        $db->save_log_bitacora($accion, $fecha, $estado, $comentario, $codigo);
+        return response()->json([
+            'success'=>true,
+            'message'=>'Usuario eliminado Exitosamente'
+        ]);
     }
-    catch
+    catch (Exception $e)
     {
-
+        return response()->json([
+            'success'=>false,
+            'message'=>'Ocurrio un error en el proceso.',
+            'error'=>$e->getMessage()
+        ],500);
     }
     finally
     {
-
+        if (isset($db) && $db!==null)
+        {
+            $db->close_conection();
+        }
     }
-
-})*/
-
+});
 //ENDPOINT GESTION DE USUARIO
 Route::get('/admin/users',function()
 {
